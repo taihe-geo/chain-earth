@@ -1,11 +1,7 @@
-mod index;
-mod camera;
-mod model;
-mod resources;
-mod texture;
-
-use crate::index::run;
-
+use tg_render_engine::{run};
+mod demo;
+use demo::MyDemo;
+// mod geometry;
 fn main() {
-    async_std::task::block_on(run());
+    async_std::task::block_on(run::<MyDemo>());
 }
