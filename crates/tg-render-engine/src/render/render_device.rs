@@ -5,7 +5,6 @@ use wgpu::{
 // use futures_lite::future;
 use std::sync::Arc;
 use wgpu::util::DeviceExt;
-
 use super::RenderQueue;
 
 /// This GPU device is responsible for the creation of most rendering and compute resources.
@@ -174,7 +173,7 @@ impl RenderDevice {
         let data = buffer.map_async(map_mode);
         self.poll(wgpu::Maintain::Wait);
         assert!(
-            future::block_on(data).is_ok(),
+            pollster::block_on(data).is_ok(),
             "Failed to map buffer to host."
         );
     }

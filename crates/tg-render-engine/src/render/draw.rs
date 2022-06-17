@@ -1,11 +1,11 @@
-use std::{any::TypeId, fmt::Debug, hash::Hash, ops::Range};
-use wgpu::RenderPass;
 use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
-
+use std::{any::TypeId, fmt::Debug, hash::Hash, ops::Range};
+use std::collections::HashMap;
+use wgpu::RenderPass;
 
 pub trait Draw<P: PhaseItem>: Send + Sync + 'static {
     /// Draws the [`PhaseItem`] by issuing draw calls via the [`TrackedRenderPass`].
-    fn draw<'w>(&mut self, item: &P);
+    fn draw<'w>(&mut self, device: &wgpu::Device, item: P);
 }
 
 pub enum RenderCommandResult {
@@ -18,7 +18,6 @@ pub trait RenderCommand {
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub struct DrawFunctionId(usize);
-pub type HashMap<K, V> = hashbrown::HashMap<K, V>;
 
 pub struct DrawFunctionsInternal<P: PhaseItem> {
     pub draw_functions: Vec<Box<dyn Draw<P>>>,
@@ -89,5 +88,4 @@ pub trait PhaseItem: Send + Sync + 'static {
     fn sort_key(&self) -> Self::SortKey;
     /// Specifies the [`Draw`] function used to render the item.
     fn draw_function(&self) -> DrawFunctionId;
-    
 }

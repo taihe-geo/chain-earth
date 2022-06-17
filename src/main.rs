@@ -1,7 +1,4 @@
-use tg_render_engine::{run};
-mod demo;
-use demo::MyDemo;
-// mod geometry;
+use tg_render_engine::{App};
 fn main() {
-    async_std::task::block_on(run::<MyDemo>());
+    // async_std::task::block_on(run::<MyDemo>());
 }

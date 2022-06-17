@@ -1,14 +1,19 @@
-pub mod draw;
-pub mod render_device;
+mod draw;
+mod render_device;
+pub use draw::*;
+pub use render_device::*;
+
 use std::sync::{Arc};
 use render_device::{RenderDevice};
-use wgpu::{CommandEncoder};
+use wgpu::{CommandEncoder,Queue};
 
-/// The context with all information required to interact with the GPU.
+/// 和GPU交互需要的所有信息
 ///
-/// The [`RenderDevice`] is used to create render resources and the
-/// the [`CommandEncoder`] is used to record a series of GPU operations.
+/// [`RenderDevice`] 用来渲染资源，[`CommandEncoder`]用来记录一系列的GPU操作
 pub struct RenderContext {
     pub render_device: RenderDevice,
     pub command_encoder: CommandEncoder,
 }
+
+/// This queue is used to enqueue tasks for the GPU to execute asynchronously.
+pub type RenderQueue = Arc<Queue>;
