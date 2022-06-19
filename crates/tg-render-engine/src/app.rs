@@ -28,7 +28,7 @@ impl App {
     }
     pub fn update(&self) {
         let mut dispatcher_builder = DispatcherBuilder::new();
-        self.add_system_list.iter().map(|add_system|{
+        self.add_system_list.iter().for_each(|add_system|{
             add_system(&mut dispatcher_builder);
         });
         let mut dispatcher = dispatcher_builder.build();

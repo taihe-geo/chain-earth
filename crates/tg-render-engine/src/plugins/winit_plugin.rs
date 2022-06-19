@@ -194,7 +194,7 @@ pub fn winit_runner_with(mut app: App) {
                         let mut window_close_requested_events =
                             app.world.write_resource::<Events<WindowCloseRequested>>();
                         window_close_requested_events.send(WindowCloseRequested { id: window_id });
-                        *control_flow = ControlFlow::Exit;
+                        // *control_flow = ControlFlow::Exit;
                     }
                     WindowEvent::KeyboardInput { input, .. } => {
                         let mut keyboard_input_events =
