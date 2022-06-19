@@ -8,7 +8,7 @@ pub struct TransformCount(pub u32);
 pub struct App {
     pub world: World,
     pub runner: Box<dyn Fn(App)>,
-    pub add_system_list: Vec<Box<dyn Fn(DispatcherBuilder)>>,
+    pub add_system_list: Vec<Box<dyn Fn(&mut DispatcherBuilder)>>,
 }
 impl Default for App{
     fn default() -> Self {
@@ -27,7 +27,10 @@ impl App {
         }
     }
     pub fn update(&self) {
-        let dispatcher_builder = DispatcherBuilder::new();
+        let mut dispatcher_builder = DispatcherBuilder::new();
+        self.add_system_list.iter().map(|add_system|{
+            add_system(&mut dispatcher_builder);
+        });
         let mut dispatcher = dispatcher_builder.build();
         dispatcher.dispatch(&self.world);
     }
@@ -38,7 +41,7 @@ impl App {
     }
     pub fn add_add_systems(
         &mut self,
-        add_systems: impl Fn(DispatcherBuilder) + 'static,
+        add_systems: impl Fn(&mut DispatcherBuilder) + 'static,
     ) -> &mut Self {
         self.add_system_list.push(Box::new(add_systems));
         self

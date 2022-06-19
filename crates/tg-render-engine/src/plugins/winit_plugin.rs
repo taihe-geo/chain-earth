@@ -68,6 +68,7 @@ impl Plugin for WinitPlugin {
         app.world.insert(Events::<WindowCreated>::default());
         app.world.insert(Events::<RequestRedraw>::default());
         app.world.insert(Events::<AppExit>::default());
+        app.world.insert(Events::<WindowCloseRequested>::default());
         app.world.insert(WindowDescriptor::default());
         if self.add_primary_window {
             let mut window_descriptor = app.world.write_resource::<WindowDescriptor>();
@@ -81,7 +82,7 @@ impl Plugin for WinitPlugin {
         if self.exit_on_close {
             // app.add_system(exit_on_window_close_system);
             app.add_add_systems(|dispaptch_builder| {
-                dispaptch_builder.with(ExitOnWindowCloseSystem, "ExitOnWindowCloseSystem", &[]);
+                dispaptch_builder.add(ExitOnWindowCloseSystem, "ExitOnWindowCloseSystem", &[]);
             });
         }
         app.set_runner(winit_runner);
