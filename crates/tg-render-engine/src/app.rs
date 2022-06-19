@@ -1,49 +1,46 @@
-use crate::{
-    DeltaTime, Plugin,PluginGroup,PluginGroupBuilder
-};
+use crate::{DeltaTime, Plugin, PluginGroup, PluginGroupBuilder,plugins};
 use specs::{
     Builder, Component, Dispatcher, DispatcherBuilder, ReadStorage, RunNow, System, VecStorage,
     World, WorldExt,
 };
-use winit::{
-    event_loop::{ControlFlow, EventLoop},
-};
+use winit::event_loop::{ControlFlow, EventLoop};
 pub struct TransformCount(pub u32);
-pub struct App<'a, 'b> {
+pub struct App {
     pub world: World,
-    pub dispatcher_builder: DispatcherBuilder<'a, 'b>,
-    pub dispatcher: Option<Dispatcher<'a, 'b>>,
     pub runner: Box<dyn Fn(App)>,
+    pub add_system_list: Vec<Box<dyn Fn(DispatcherBuilder)>>,
 }
-impl<'a, 'b> App<'a, 'b> {
+impl Default for App{
+    fn default() -> Self {
+        let mut app = App::new();
+        app.add_plugin(plugins::winit_plugin::WinitPlugin::default());
+        app
+    }
+}
+impl App {
     pub fn new() -> Self {
         let world = World::new();
         Self {
             world,
-            dispatcher_builder: DispatcherBuilder::new(),
-            dispatcher: None,
             runner: Box::new(run_once),
+            add_system_list: Vec::new(),
         }
     }
-    pub fn update(&mut self) {
-        self.build();
-        self.dispatcher.unwrap().dispatch(&self.world);
-    }
-    fn build(&mut self) {
-        if let None = self.dispatcher {
-            self.dispatcher = Some(self.dispatcher_builder.build());
-        }
+    pub fn update(&self) {
+        let dispatcher_builder = DispatcherBuilder::new();
+        let mut dispatcher = dispatcher_builder.build();
+        dispatcher.dispatch(&self.world);
     }
     pub fn run(&mut self) {
         let mut app = std::mem::replace(self, App::new());
         let runner = std::mem::replace(&mut app.runner, Box::new(run_once));
         (runner)(app);
     }
-    pub fn add_system<T>(&mut self, system: T, name: &str, dep: &[&str]) -> &mut Self
-    where
-        T: for<'c> System<'c> + Send + 'a,
-    {
-        self.dispatcher_builder.with(system, name, dep);
+    pub fn add_add_systems(
+        &mut self,
+        add_systems: impl Fn(DispatcherBuilder) + 'static,
+    ) -> &mut Self {
+        self.add_system_list.push(Box::new(add_systems));
         self
     }
     pub fn add_plugin<T>(&mut self, plugin: T) -> &mut Self

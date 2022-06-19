@@ -1,4 +1,5 @@
 use tg_render_engine::{App};
 fn main() {
-    // async_std::task::block_on(run::<MyDemo>());
+    let mut app = App::default();
+    app.run();
 }

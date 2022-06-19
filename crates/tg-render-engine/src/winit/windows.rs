@@ -8,6 +8,9 @@ pub struct Windows {
 }
 
 impl Windows {
+    pub fn new()->Self{
+        Windows { windows: HashMap::new() }
+    }
     /// Add the provided [`Window`] to the [`Windows`] resource.
     pub fn add(&mut self, window: Window) {
         self.windows.insert(window.id(), window);

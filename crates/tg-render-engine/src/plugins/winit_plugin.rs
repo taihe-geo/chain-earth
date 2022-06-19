@@ -1,16 +1,20 @@
 use std::time::Instant;
 
 use crate::{
-    events::Events,
+    events::{event, Events, ManualEventReader},
     winit::{
-        event::{CursorMoved, WindowResized},
+        event::{
+            CreateWindow, CursorMoved, RequestRedraw, WindowCloseRequested, WindowCreated,
+            WindowResized,
+        },
         input::MouseMotion,
+        window::{WindowDescriptor, WindowId},
         winit_config::UpdateMode,
     },
     App, Plugin,
 };
 use nalgebra_glm::{DVec2, Vec2};
-use specs::WorldExt;
+use specs::{Read, ReadStorage, System, WorldExt, Write, WriteStorage};
 use winit::{
     event::{
         DeviceEvent, ElementState, Event, KeyboardInput, StartCause, VirtualKeyCode, WindowEvent,
@@ -20,13 +24,66 @@ use winit::{
 };
 
 use crate::winit::{windows::Windows, winit_config::WinitSettings, winit_windows::WinitWindows};
+/// An event that indicates the app should exit. This will fully exit the app process.
+#[derive(Debug, Clone, Default)]
+pub struct AppExit;
+pub struct ExitOnWindowCloseSystem;
+impl<'a> System<'a> for ExitOnWindowCloseSystem {
+    type SystemData = (
+        Write<'a, Events<AppExit>>,
+        Read<'a, Events<WindowCloseRequested>>,
+    );
 
-#[derive(Default)]
-pub struct WinitPlugin;
+    fn run(&mut self, (mut app_exit_events, window_close_requested_events): Self::SystemData) {
+        let mut reader = ManualEventReader::<WindowCloseRequested>::default();
+        if reader.iter(&window_close_requested_events).next().is_some() {
+            app_exit_events.send(AppExit);
+        }
+    }
+}
+
+pub struct WinitPlugin {
+    pub add_primary_window: bool,
+    pub exit_on_close: bool,
+}
+impl Default for WinitPlugin {
+    fn default() -> Self {
+        WinitPlugin {
+            add_primary_window: true,
+            exit_on_close: true,
+        }
+    }
+}
 
 impl Plugin for WinitPlugin {
     fn build(&self, app: &mut App) {
         app.world.insert(WinitSettings::default());
+        app.world.insert(WinitWindows::default());
+        app.world.insert(Windows::default());
+        app.world.insert(Events::<KeyboardInput>::default());
+        app.world.insert(Events::<CursorMoved>::default());
+        app.world.insert(Events::<WindowResized>::default());
+        app.world.insert(Events::<MouseMotion>::default());
+        app.world.insert(Events::<CreateWindow>::default());
+        app.world.insert(Events::<WindowCreated>::default());
+        app.world.insert(Events::<RequestRedraw>::default());
+        app.world.insert(Events::<AppExit>::default());
+        app.world.insert(WindowDescriptor::default());
+        if self.add_primary_window {
+            let mut window_descriptor = app.world.write_resource::<WindowDescriptor>();
+            let mut create_window_event = app.world.write_resource::<Events<CreateWindow>>();
+            create_window_event.send(CreateWindow {
+                id: WindowId::primary(),
+                descriptor: (*window_descriptor).clone(),
+            });
+        }
+
+        if self.exit_on_close {
+            // app.add_system(exit_on_window_close_system);
+            app.add_add_systems(|dispaptch_builder| {
+                dispaptch_builder.with(ExitOnWindowCloseSystem, "ExitOnWindowCloseSystem", &[]);
+            });
+        }
         app.set_runner(winit_runner);
     }
 }
@@ -58,20 +115,18 @@ impl Default for WinitPersistentState {
         }
     }
 }
+
 pub fn winit_runner_with(mut app: App) {
     let event_loop = EventLoop::new();
-    let window = winit::window::WindowBuilder::new()
-        .with_title("title")
-        .build(&event_loop)
-        .unwrap();
+    handle_initial_window_events(&mut app, &event_loop);
+    let mut create_window_event_reader = ManualEventReader::<CreateWindow>::default();
+    let mut app_exit_event_reader = ManualEventReader::<AppExit>::default();
+    let mut redraw_event_reader = ManualEventReader::<RequestRedraw>::default();
     let mut winit_state = WinitPersistentState::default();
-
     let event_handler = move |event: Event<()>,
                               event_loop: &EventLoopWindowTarget<()>,
                               control_flow: &mut ControlFlow| {
         match event {
-            Event::MainEventsCleared => window.request_redraw(),
-            // NEW!
             Event::NewEvents(start) => {
                 let winit_config = app.world.read_resource::<WinitSettings>();
                 let windows = app.world.read_resource::<Windows>();
@@ -115,6 +170,16 @@ pub fn winit_runner_with(mut app: App) {
                 winit_state.low_power_event = true;
 
                 match event {
+                    // WindowEvent::CloseRequested
+                    // | WindowEvent::KeyboardInput {
+                    //     input:
+                    //         KeyboardInput {
+                    //             state: ElementState::Pressed,
+                    //             virtual_keycode: Some(VirtualKeyCode::Escape),
+                    //             ..
+                    //         },
+                    //     ..
+                    // } => *control_flow = ControlFlow::Exit,
                     WindowEvent::Resized(size) => {
                         window.update_actual_size_from_backend(size.width, size.height);
                         let mut r = app.world.write_resource::<Events<WindowResized>>();
@@ -123,6 +188,12 @@ pub fn winit_runner_with(mut app: App) {
                             width: window.width(),
                             height: window.height(),
                         });
+                    }
+                    WindowEvent::CloseRequested => {
+                        let mut window_close_requested_events =
+                            app.world.write_resource::<Events<WindowCloseRequested>>();
+                        window_close_requested_events.send(WindowCloseRequested { id: window_id });
+                        *control_flow = ControlFlow::Exit;
                     }
                     WindowEvent::KeyboardInput { input, .. } => {
                         let mut keyboard_input_events =
@@ -169,6 +240,65 @@ pub fn winit_runner_with(mut app: App) {
             Event::Resumed => {
                 winit_state.active = true;
             }
+            Event::RedrawEventsCleared => {
+                {
+                    let mut winit_config = app.world.write_resource::<WinitSettings>();
+                    let mut windows = app.world.write_resource::<Windows>();
+                    let focused = windows.iter().any(|w| w.is_focused());
+                    let now = Instant::now();
+                    use UpdateMode::*;
+                    *control_flow = match winit_config.update_mode(focused) {
+                        Continuous => ControlFlow::Poll,
+                        Reactive { max_wait } | ReactiveLowPower { max_wait } => {
+                            ControlFlow::WaitUntil(now + *max_wait)
+                        }
+                    };
+                }
+                // This block needs to run after `app.update()` in `MainEventsCleared`. Otherwise,
+                // we won't be able to see redraw requests until the next event, defeating the
+                // purpose of a redraw request!
+                let mut redraw = false;
+                let app_redraw_events = app.world.write_resource::<Events<RequestRedraw>>();
+                if redraw_event_reader
+                    .iter(&app_redraw_events)
+                    .last()
+                    .is_some()
+                {
+                    *control_flow = ControlFlow::Poll;
+                    redraw = true;
+                }
+                let app_exit_events = app.world.write_resource::<Events<AppExit>>();
+                if app_exit_event_reader
+                    .iter(&app_exit_events)
+                    .last()
+                    .is_some()
+                {
+                    *control_flow = ControlFlow::Exit;
+                }
+                winit_state.redraw_request_sent = redraw;
+            }
+            Event::MainEventsCleared => {
+                handle_create_window_events(&mut app, event_loop, &mut create_window_event_reader);
+                let winit_config = app.world.write_resource::<WinitSettings>();
+                let update = if winit_state.active {
+                    let windows = app.world.write_resource::<Windows>();
+                    let focused = windows.iter().any(|w| w.is_focused());
+                    match winit_config.update_mode(focused) {
+                        UpdateMode::Continuous | UpdateMode::Reactive { .. } => true,
+                        UpdateMode::ReactiveLowPower { .. } => {
+                            winit_state.low_power_event
+                                || winit_state.redraw_request_sent
+                                || winit_state.timeout_reached
+                        }
+                    }
+                } else {
+                    false
+                };
+                if update {
+                    winit_state.last_update = Instant::now();
+                    app.update();
+                }
+            }
             _ => {}
         }
     };
@@ -179,4 +309,44 @@ where
     F: 'static + FnMut(Event<'_, ()>, &EventLoopWindowTarget<()>, &mut ControlFlow),
 {
     event_loop.run(event_handler)
+}
+fn handle_create_window_events(
+    app: &mut App,
+    event_loop: &EventLoopWindowTarget<()>,
+    create_window_event_reader: &mut ManualEventReader<CreateWindow>,
+) {
+    let mut winit_windows = app.world.write_resource::<WinitWindows>();
+    let mut windows = app.world.write_resource::<Windows>();
+    let create_window_events = app.world.write_resource::<Events<CreateWindow>>();
+    let mut window_created_events = app.world.write_resource::<Events<WindowCreated>>();
+    for create_window_event in create_window_event_reader.iter(&create_window_events) {
+        let window = winit_windows.create_window(
+            event_loop,
+            create_window_event.id,
+            &create_window_event.descriptor,
+        );
+        windows.add(window);
+        window_created_events.send(WindowCreated {
+            id: create_window_event.id,
+        });
+    }
+}
+
+fn handle_initial_window_events(app: &mut App, event_loop: &EventLoop<()>) {
+    let mut winit_windows = app.world.write_resource::<WinitWindows>();
+    let mut create_window_events = app.world.write_resource::<Events<CreateWindow>>();
+    let mut windows = app.world.write_resource::<Windows>();
+    let mut window_created_events = app.world.write_resource::<Events<WindowCreated>>();
+
+    for create_window_event in create_window_events.drain() {
+        let window = winit_windows.create_window(
+            event_loop,
+            create_window_event.id,
+            &create_window_event.descriptor,
+        );
+        windows.add(window);
+        window_created_events.send(WindowCreated {
+            id: create_window_event.id,
+        });
+    }
 }
