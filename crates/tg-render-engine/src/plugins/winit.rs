@@ -9,7 +9,9 @@ use crate::{
         },
         input::MouseMotion,
         window::{WindowDescriptor, WindowId},
-        winit_config::UpdateMode,
+        windows::{Windows},
+        winit_config::{UpdateMode,WinitSettings},
+        winit_windows::{WinitWindows}
     },
     App, Plugin,
 };
@@ -23,7 +25,6 @@ use winit::{
     window::{Window, WindowBuilder},
 };
 
-use crate::winit::{windows::Windows, winit_config::WinitSettings, winit_windows::WinitWindows};
 /// An event that indicates the app should exit. This will fully exit the app process.
 #[derive(Debug, Clone, Default)]
 pub struct AppExit;

@@ -1,4 +1,4 @@
-use crate::{DeltaTime, Plugin, PluginGroup, PluginGroupBuilder,plugins};
+use crate::{plugins, DefautlPlugins, DeltaTime, Plugin, PluginGroup, PluginGroupBuilder};
 use specs::{
     Builder, Component, Dispatcher, DispatcherBuilder, ReadStorage, RunNow, System, VecStorage,
     World, WorldExt,
@@ -10,10 +10,10 @@ pub struct App {
     pub runner: Box<dyn Fn(App)>,
     pub add_system_list: Vec<Box<dyn Fn(&mut DispatcherBuilder)>>,
 }
-impl Default for App{
+impl Default for App {
     fn default() -> Self {
         let mut app = App::new();
-        app.add_plugin(plugins::winit_plugin::WinitPlugin::default());
+        app.add_plugins(DefautlPlugins);
         app
     }
 }
@@ -28,7 +28,7 @@ impl App {
     }
     pub fn update(&self) {
         let mut dispatcher_builder = DispatcherBuilder::new();
-        self.add_system_list.iter().for_each(|add_system|{
+        self.add_system_list.iter().for_each(|add_system| {
             add_system(&mut dispatcher_builder);
         });
         let mut dispatcher = dispatcher_builder.build();

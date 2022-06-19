@@ -10,5 +10,6 @@ pub use plugin_group::{PluginGroup,PluginGroupBuilder};
 mod plugins;
 mod events;
 mod winit;
+pub use plugins::default::DefautlPlugins;
 #[derive(Default)]
 pub struct DeltaTime(f32);
