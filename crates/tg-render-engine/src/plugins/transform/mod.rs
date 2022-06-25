@@ -31,19 +31,11 @@ impl Default for Matrix {
         Self(Mat4::default())
     }
 }
+#[derive(Default)]
 struct TransformSystem {
     modified: BitSet,
     reader_id: Option<ReaderId<ComponentEvent>>,
 }
-impl Default for TransformSystem {
-    fn default() -> Self {
-        Self {
-            modified: BitSet::default(),
-            reader_id: None,
-        }
-    }
-}
-
 impl<'a> System<'a> for TransformSystem {
     // These are the resources required for execution.
     // You can also define a struct and `#[derive(SystemData)]`,

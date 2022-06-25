@@ -244,8 +244,8 @@ pub fn winit_runner_with(mut app: App) {
             }
             Event::RedrawEventsCleared => {
                 {
-                    let mut winit_config = app.world.write_resource::<WinitSettings>();
-                    let mut windows = app.world.write_resource::<Windows>();
+                    let winit_config = app.world.write_resource::<WinitSettings>();
+                    let windows = app.world.write_resource::<Windows>();
                     let focused = windows.iter().any(|w| w.is_focused());
                     let now = Instant::now();
                     use UpdateMode::*;
@@ -281,8 +281,8 @@ pub fn winit_runner_with(mut app: App) {
             }
             Event::MainEventsCleared => {
                 handle_create_window_events(&mut app, event_loop, &mut create_window_event_reader);
-                let winit_config = app.world.write_resource::<WinitSettings>();
                 let update = if winit_state.active {
+                    let winit_config = app.world.write_resource::<WinitSettings>();
                     let windows = app.world.write_resource::<Windows>();
                     let focused = windows.iter().any(|w| w.is_focused());
                     match winit_config.update_mode(focused) {

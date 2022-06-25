@@ -52,8 +52,23 @@ impl DerefMut for Parent {
         &mut self.0
     }
 }
+pub struct PreviousParent(pub Entity);
+impl Component for PreviousParent {
+    type Storage = DerefFlaggedStorage<Self, DenseVecStorage<Self>>;
+}
+impl Deref for PreviousParent {
+    type Target = Entity;
 
-pub type PreviousParent = Parent;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+impl DerefMut for PreviousParent {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+#[derive(Default)]
 pub struct HierarchySystem {
     pub dirty: BitSet,
     pub reader_id: Option<ReaderId<ComponentEvent>>,
@@ -104,7 +119,7 @@ impl<'a> System<'a> for HierarchySystem {
                     {
                         previous_parent_children.0.retain(|e| *e != entity);
                     }
-                    *possible_previous_parent = (Parent(parent.0));
+                    *possible_previous_parent = (PreviousParent(parent.0));
                 } else {
                     s_updater.insert(entity, (Parent(parent.0)));
                 }
@@ -132,5 +147,9 @@ impl<'a> System<'a> for HierarchySystem {
 }
 pub struct HierarchyPlugin;
 impl Plugin for HierarchyPlugin {
-    fn build(&self, app: &mut crate::App) {}
+    fn build(&self, app: &mut crate::App) {
+        app.add_add_systems(|dispaptch_builder| {
+            dispaptch_builder.add(HierarchySystem::default(), "HierarchySystem", &[]);
+        });
+    }
 }

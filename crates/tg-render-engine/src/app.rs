@@ -26,12 +26,13 @@ impl App {
             add_system_list: Vec::new(),
         }
     }
-    pub fn update(&self) {
+    pub fn update(&mut self) {
         let mut dispatcher_builder = DispatcherBuilder::new();
         self.add_system_list.iter().for_each(|add_system| {
             add_system(&mut dispatcher_builder);
         });
         let mut dispatcher = dispatcher_builder.build();
+        dispatcher.setup(&mut self.world);
         dispatcher.dispatch(&self.world);
     }
     pub fn run(&mut self) {
