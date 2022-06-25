@@ -54,6 +54,8 @@ impl Plugin for RenderPlugin {
             app.world.insert(device.clone());
             app.world.insert(queue.clone());
             app.world.insert(adapter_info.clone());
+            app.world.insert(instance);
+            app.world.insert(surface);
         }
     }
 }

@@ -11,12 +11,19 @@ image = "0.23"
 log = "0.4"
 tobj = "2.0"
 wgpu = "0.12"
+
+# Serde
+serde = { version = "1.0.110", features = ["derive", "rc"] }
+
 winit = "0.26"
 parking_lot = "0.11.0"
-specs = {version="0.16.1",features=["parallel"]}
 pollster = "0.2"
 bytemuck = { version = "1.2.0", features = ["extern_crate_alloc"] }
 nalgebra = "0.21.0"
 nalgebra-glm = { version = "0.7", features = ["serde-serialize"] }
 uuid = { version = "1.1.2", features = ["v4","fast-rng","macro-diagnostics"] }
 raw-window-handle = "0.4.2"
+specs = {version="0.17.0",features=["parallel","specs-derive","nightly","serde"]}
+# specs-idvs={path="../specs-idvs"}
+specs-idvs = { git = "https://gitlab.com/veloren/specs-idvs.git", rev = "8be2abcddf8f524cb5876e8dd20a7e47cfaf7573" }
+smallvec = { version = "1.6", features = ["serde", "union", "const_generics"] }
