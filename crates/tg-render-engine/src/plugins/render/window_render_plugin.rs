@@ -57,7 +57,7 @@ impl DerefMut for ExtractedWindows {
 pub struct ExtractWindowSystem;
 impl<'a> System<'a> for ExtractWindowSystem {
     type SystemData = (ReadExpect<'a, Windows>, WriteExpect<'a, ExtractedWindows>);
-    fn run(&mut self, (s_windows, s_extracted_windows): Self::SystemData) {
+    fn run(&mut self, (s_windows, mut s_extracted_windows): Self::SystemData) {
         for window in s_windows.iter() {
             let (new_width, new_height) = (
                 window.physical_width().max(1),
@@ -108,8 +108,8 @@ impl<'a> System<'a> for PrepareWindowsSystem {
         &mut self,
         (
             s_windows,
-             s_extracted_windows,
-             s_window_surfaces,
+             mut s_extracted_windows,
+             mut s_window_surfaces,
              s_render_device,
              s_render_instance
         ): Self::SystemData,
@@ -125,7 +125,7 @@ impl<'a> System<'a> for PrepareWindowsSystem {
                 });
 
             let swap_chain_descriptor = wgpu::SurfaceConfiguration {
-                format: wgpu::TextureFormat::Rgba8UnormSrgb,
+                format: wgpu::TextureFormat::Bgra8UnormSrgb,
                 width: window.physical_width,
                 height: window.physical_height,
                 usage: wgpu::TextureUsages::RENDER_ATTACHMENT,

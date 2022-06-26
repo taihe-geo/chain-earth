@@ -20,11 +20,12 @@ impl Plugin for RenderPlugin {
                     let handle = window.raw_window_handle().get_handle();
                     instance.create_surface(&handle)
                 });
-                raw_handle.unwrap()
+                raw_handle
             };
+            // let compatible_surface = Some(surface).as_ref();
             let request_adapter_options = wgpu::RequestAdapterOptions {
                 power_preference: options.power_preference,
-                compatible_surface: Some(surface).as_ref(),
+                compatible_surface:surface.as_ref() ,
                 ..Default::default()
             };
             let (device, queue, adapter_info,adapter) = pollster::block_on(initialize_renderer(
@@ -32,25 +33,18 @@ impl Plugin for RenderPlugin {
                 &options,
                 &request_adapter_options,
             ));
-            // let config = wgpu::SurfaceConfiguration {
-            //     usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            //     format: surface.get_preferred_format(&adapter).unwrap(),
-            //     width: size.width,
-            //     height: size.height,
-            //     present_mode: wgpu::PresentMode::Fifo,
-            // };
             app.world.insert(device);
             app.world.insert(queue);
             app.world.insert(adapter_info);
             app.world.insert(adapter);
             app.world.insert(instance);
-            app.world.insert(surface);
         }
         app.add_plugin(WindowRenderPlugin);
     }
 }
 pub type RenderDevice = Arc<Device>;
 pub type RenderQueue = Arc<Queue>;
+pub type RenderInstance = Instance;
 async fn initialize_renderer(
     instance: &Instance,
     options: &WgpuSettings,
