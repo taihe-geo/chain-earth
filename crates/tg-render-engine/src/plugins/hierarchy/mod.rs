@@ -148,6 +148,8 @@ impl<'a> System<'a> for HierarchySystem {
 pub struct HierarchyPlugin;
 impl Plugin for HierarchyPlugin {
     fn build(&self, app: &mut crate::App) {
+        app.world.register::<Parent>();
+        app.world.register::<Children>();
         app.add_add_systems(|dispaptch_builder| {
             dispaptch_builder.add(HierarchySystem::default(), "HierarchySystem", &[]);
         });

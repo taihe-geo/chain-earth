@@ -1,6 +1,6 @@
 mod render;
 mod app;
-pub use app::{App};
+pub use app::{App,Bundle,Bundler};
 mod core;
 mod graphics;
 mod plugin;

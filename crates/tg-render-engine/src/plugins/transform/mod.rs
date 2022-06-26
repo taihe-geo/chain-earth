@@ -5,6 +5,7 @@
 // pub use transform::*;
 use crate::{App, Plugin};
 use nalgebra_glm::Mat4;
+use nalgebra_glm::Vec3;
 // use specs::{
 //     Builder, Component, ReadStorage, System, SystemData, VecStorage, WorldExt, WriteStorage,DerefFlaggedStorage, DenseVecStorage
 // };
@@ -13,7 +14,17 @@ use specs::prelude::*;
 use specs::DerefFlaggedStorage;
 use specs_idvs::IdvStorage;
 
-pub struct GlobalMatrix(Mat4);
+pub struct Pos(pub Vec3);
+impl Component for Pos {
+    type Storage = DerefFlaggedStorage<Self, DenseVecStorage<Self>>;
+}
+impl Default for Pos {
+    fn default() -> Self {
+        Self(Vec3::default())
+    }
+}
+
+pub struct GlobalMatrix(pub Mat4);
 impl Component for GlobalMatrix {
     type Storage = DerefFlaggedStorage<Self, DenseVecStorage<Self>>;
 }
@@ -22,11 +33,11 @@ impl Default for GlobalMatrix {
         Self(Mat4::default())
     }
 }
-pub struct Matrix(Mat4);
-impl Component for Matrix {
+pub struct LocalMatrix(pub Mat4);
+impl Component for LocalMatrix {
     type Storage = DerefFlaggedStorage<Self, DenseVecStorage<Self>>;
 }
-impl Default for Matrix {
+impl Default for LocalMatrix {
     fn default() -> Self {
         Self(Mat4::default())
     }
@@ -42,7 +53,7 @@ impl<'a> System<'a> for TransformSystem {
     // see the `full` example.
     type SystemData = (
         Entities<'a>,
-        WriteStorage<'a, Matrix>,
+        WriteStorage<'a, LocalMatrix>,
         WriteStorage<'a, GlobalMatrix>,
         WriteStorage<'a, Children>,
         WriteStorage<'a, Parent>,
@@ -92,12 +103,12 @@ impl<'a> System<'a> for TransformSystem {
     }
     fn setup(&mut self, res: &mut World) {
         Self::SystemData::setup(res);
-        self.reader_id = Some(WriteStorage::<Matrix>::fetch(&res).register_reader());
+        self.reader_id = Some(WriteStorage::<LocalMatrix>::fetch(&res).register_reader());
     }
 }
 fn propagate_recursive<'a>(
     parent_global_matrix: Mat4,
-    s_matrix: &WriteStorage<'a, Matrix>,
+    s_matrix: &WriteStorage<'a, LocalMatrix>,
     s_global_matrix: &WriteStorage<'a, GlobalMatrix>,
     s_children: &WriteStorage<'a, Children>,
     entity: Entity,
@@ -110,7 +121,7 @@ fn propagate_recursive<'a>(
         {
             if changed {
                 let res = parent_global_matrix * matrix.0;
-                s_updater.insert(entity, Matrix(res));
+                s_updater.insert(entity, LocalMatrix(res));
                 res
             } else {
                 global_matrix.0.clone()
@@ -136,6 +147,9 @@ fn propagate_recursive<'a>(
 pub struct TransformPlugin;
 impl Plugin for TransformPlugin {
     fn build(&self, app: &mut App) {
+        app.world.register::<Pos>();
+        app.world.register::<GlobalMatrix>();
+        app.world.register::<LocalMatrix>();
         app.add_add_systems(|dispatcher_builder| {
             dispatcher_builder.add(TransformSystem::default(), "TransformSystem", &[]);
         });

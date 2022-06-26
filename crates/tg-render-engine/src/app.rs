@@ -1,9 +1,22 @@
 use crate::{plugins, DefautlPlugins, DeltaTime, Plugin, PluginGroup, PluginGroupBuilder};
 use specs::{
-    Builder, Component, Dispatcher, DispatcherBuilder, ReadStorage, RunNow, System, VecStorage,
-    World, WorldExt,
+    Builder, Component, Dispatcher, DispatcherBuilder, Entity, ReadStorage, RunNow, System,
+    VecStorage, World, WorldExt,
 };
 use winit::event_loop::{ControlFlow, EventLoop};
+
+pub trait Bundle {
+    fn bundle(self, _: &mut World) -> Entity;
+}
+pub trait Bundler {
+    fn create_entity_with_bundle<T: Bundle>(&mut self, bundle: T) -> Entity;
+}
+impl Bundler for World {
+    fn create_entity_with_bundle<T: Bundle>(&mut self, bundle: T) -> Entity {
+        bundle.bundle(self)
+    }
+}
+
 pub struct TransformCount(pub u32);
 pub struct App {
     pub world: World,
@@ -28,6 +41,7 @@ impl App {
     }
     pub fn update(&mut self) {
         let mut dispatcher_builder = DispatcherBuilder::new();
+        // let mut dispatcher_builder = Bundler::new(&mut self.world,DispatcherBuilder::new());
         self.add_system_list.iter().for_each(|add_system| {
             add_system(&mut dispatcher_builder);
         });
