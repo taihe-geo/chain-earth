@@ -1,7 +1,7 @@
 use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 use std::{any::TypeId, fmt::Debug, hash::Hash, ops::Range};
-use std::collections::HashMap;
 use wgpu::RenderPass;
+use crate::HashMap;
 
 pub trait Draw<P: PhaseItem>: Send + Sync + 'static {
     /// Draws the [`PhaseItem`] by issuing draw calls via the [`TrackedRenderPass`].

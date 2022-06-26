@@ -1,5 +1,5 @@
 use nalgebra_glm::{IVec2};
-use std::collections::HashMap;
+use crate::HashMap;
 use super::window::{Window, WindowDescriptor, WindowId, WindowMode};
 use raw_window_handle::HasRawWindowHandle;
 use winit::dpi::LogicalSize;

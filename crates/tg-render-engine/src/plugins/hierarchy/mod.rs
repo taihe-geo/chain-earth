@@ -6,13 +6,12 @@ use specs_idvs::IdvStorage;
 // use specs::{ DerefFlaggedStorage,SystemData,System,world::{Index as EntityId}};
 use serde::{Deserialize, Serialize};
 use smallvec::SmallVec;
-use std::collections::HashMap;
 use std::{
     ops::{Deref, DerefMut},
     process::Child,
 };
 
-use crate::Plugin;
+use crate::{Plugin,HashMap};
 pub struct Children(pub SmallVec<[Entity; 8]>);
 impl Component for Children {
     type Storage = DerefFlaggedStorage<Self, DenseVecStorage<Self>>;

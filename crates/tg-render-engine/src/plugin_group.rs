@@ -1,5 +1,4 @@
-use crate::{App, Plugin};
-use std::collections::HashMap;
+use crate::{App, Plugin,HashMap};
 use std::any::TypeId;
 
 /// Combines multiple [`Plugin`]s into a single unit.

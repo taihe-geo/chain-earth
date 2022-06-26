@@ -27,3 +27,6 @@ specs = {version="0.17.0",features=["parallel","specs-derive","nightly","serde"]
 # specs-idvs={path="../specs-idvs"}
 specs-idvs = { git = "https://gitlab.com/veloren/specs-idvs.git", rev = "8be2abcddf8f524cb5876e8dd20a7e47cfaf7573" }
 smallvec = { version = "1.6", features = ["serde", "union", "const_generics"] }
+hashbrown = { version = "0.11", features = ["serde"] }
+
+ahash = "0.7.0"

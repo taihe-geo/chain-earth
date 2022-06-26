@@ -1,31 +1,10 @@
-use std::{time::Instant,sync::Arc};
+use std::{sync::Arc, time::Instant};
 
-use crate::{
-    events::{event, Events, ManualEventReader},
-    plugins::render::settings::WgpuSettings,
-    winit::{
-        event::{
-            CreateWindow, CursorMoved, RequestRedraw, WindowCloseRequested, WindowCreated,
-            WindowResized,
-        },
-        input::MouseMotion,
-        window::{WindowDescriptor, WindowId},
-        windows::Windows,
-        winit_config::{UpdateMode, WinitSettings},
-        winit_windows::WinitWindows,
-    },
-    App, Plugin,
-};
-use nalgebra_glm::{DVec2, Vec2};
+use crate::{plugins::render::settings::WgpuSettings, winit::windows::Windows, App, Plugin};
 use specs::{Read, ReadStorage, System, WorldExt, Write, WriteStorage};
-use wgpu::{Instance, RequestAdapterOptions, Device, Queue, AdapterInfo};
-use winit::{
-    event::{
-        DeviceEvent, ElementState, Event, KeyboardInput, StartCause, VirtualKeyCode, WindowEvent,
-    },
-    event_loop::{ControlFlow, EventLoop, EventLoopWindowTarget},
-    window::{Window, WindowBuilder},
-};
+use wgpu::{Adapter, AdapterInfo, Device, Instance, Queue, RequestAdapterOptions};
+
+use super::WindowRenderPlugin;
 pub struct RenderPlugin;
 impl Plugin for RenderPlugin {
     fn build(&self, app: &mut App) {
@@ -33,30 +12,41 @@ impl Plugin for RenderPlugin {
         app.world.insert(options.clone());
         if let Some(backends) = options.backends {
             let instance = wgpu::Instance::new(backends);
+            // let mut w:f32=0.0;
+            // let mut h:f32=0.0;
             let surface = {
                 let windows = app.world.write_resource::<Windows>();
                 let raw_handle = windows.get_primary().map(|window| unsafe {
                     let handle = window.raw_window_handle().get_handle();
                     instance.create_surface(&handle)
                 });
-                raw_handle
+                raw_handle.unwrap()
             };
             let request_adapter_options = wgpu::RequestAdapterOptions {
                 power_preference: options.power_preference,
-                compatible_surface: surface.as_ref(),
+                compatible_surface: Some(surface).as_ref(),
                 ..Default::default()
             };
-            let (device, queue, adapter_info) = pollster::block_on(initialize_renderer(
+            let (device, queue, adapter_info,adapter) = pollster::block_on(initialize_renderer(
                 &instance,
                 &options,
                 &request_adapter_options,
             ));
-            app.world.insert(device.clone());
-            app.world.insert(queue.clone());
-            app.world.insert(adapter_info.clone());
+            // let config = wgpu::SurfaceConfiguration {
+            //     usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+            //     format: surface.get_preferred_format(&adapter).unwrap(),
+            //     width: size.width,
+            //     height: size.height,
+            //     present_mode: wgpu::PresentMode::Fifo,
+            // };
+            app.world.insert(device);
+            app.world.insert(queue);
+            app.world.insert(adapter_info);
+            app.world.insert(adapter);
             app.world.insert(instance);
             app.world.insert(surface);
         }
+        app.add_plugin(WindowRenderPlugin);
     }
 }
 pub type RenderDevice = Arc<Device>;
@@ -65,7 +55,7 @@ async fn initialize_renderer(
     instance: &Instance,
     options: &WgpuSettings,
     request_adapter_options: &RequestAdapterOptions<'_>,
-) -> (Arc<Device>, RenderQueue, AdapterInfo) {
+) -> (Arc<Device>, RenderQueue, AdapterInfo, Adapter) {
     let adapter = instance
         .request_adapter(request_adapter_options)
         .await
@@ -92,5 +82,5 @@ async fn initialize_renderer(
         .unwrap();
     let device = Arc::new(device);
     let queue = Arc::new(queue);
-    (RenderDevice::from(device), queue, adapter_info)
+    (RenderDevice::from(device), queue, adapter_info, adapter)
 }

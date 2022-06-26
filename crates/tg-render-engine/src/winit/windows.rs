@@ -1,10 +1,9 @@
 use super::window::{Window,WindowId};
-use std::collections::HashMap;
-
+use crate::HashMap;
 /// A collection of [`Window`]s with unique [`WindowId`]s.
 #[derive(Debug, Default)]
 pub struct Windows {
-    windows: HashMap<WindowId, Window>,
+    pub windows: HashMap<WindowId, Window>,
 }
 
 impl Windows {

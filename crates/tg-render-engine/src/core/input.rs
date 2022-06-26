@@ -1,5 +1,5 @@
 use nalgebra_glm::Vec2;
-use std::collections::HashSet;
+use crate::HashSet;
 use winit::event::VirtualKeyCode;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
