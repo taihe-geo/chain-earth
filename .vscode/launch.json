@@ -5,9 +5,20 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "windows平台调试rust",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceRoot}/target/debug/chain-earth.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceRoot}",
+            "environment": [],
+            "preLaunchTask":"rust: cargo build",
+        },
+        {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'chain-earth'",
+            "name": "linux平台调试rust",
             "cargo": {
                 "args": [
                     "build",
