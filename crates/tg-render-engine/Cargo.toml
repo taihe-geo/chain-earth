@@ -30,3 +30,5 @@ smallvec = { version = "1.6", features = ["serde", "union", "const_generics"] }
 hashbrown = { version = "0.11", features = ["serde"] }
 
 ahash = "0.7.0"
+typename = {path="../typename"}
+# 给系统添加唯一值作为名称

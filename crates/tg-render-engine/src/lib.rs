@@ -1,3 +1,5 @@
+use std::any::type_name;
+
 use ahash::RandomState;
 mod render;
 mod app;
@@ -16,3 +18,8 @@ pub use plugins::default::DefautlPlugins;
 pub struct DeltaTime(f32);
 pub type HashSet<K> = hashbrown::HashSet<K, RandomState>;
 pub type HashMap<K, V> = hashbrown::HashMap<K, V, RandomState>;
+pub trait TypeName {
+    fn id() -> &'static str {
+        type_name::<Self>()
+    }
+}

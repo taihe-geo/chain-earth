@@ -4,10 +4,14 @@ use crate::{
         window::{PresentMode, WindowId},
         windows::Windows,
     },
-    App, HashMap, HashSet, Plugin,
+    App, HashMap, HashSet, Plugin,TypeName
 };
 use specs::{Read, ReadExpect, System, Write, WriteExpect};
-use std::ops::{Deref, DerefMut};
+use typename::{TypeName};
+use std::{
+    any::{type_name, TypeId},
+    ops::{Deref, DerefMut},
+};
 use wgpu::{Instance, TextureFormat, TextureView};
 
 use super::RenderDevice;
@@ -20,8 +24,8 @@ impl Plugin for WindowRenderPlugin {
         app.world.insert(ExtractedWindows::default());
         app.world.insert(WindowSurfaces::default());
         app.add_add_systems(|dispatcher_builder| {
-            dispatcher_builder.add(ExtractWindowSystem, "ExtractWindow", &[]);
-            dispatcher_builder.add(PrepareWindowsSystem, "PrepareWindowsSystem", &[]);
+            dispatcher_builder.add(ExtractWindowSystem, ExtractWindowSystem::id(), &[]);
+            dispatcher_builder.add(PrepareWindowsSystem, PrepareWindowsSystem::id(), &[]);
         });
     }
 }
@@ -54,7 +58,9 @@ impl DerefMut for ExtractedWindows {
         &mut self.windows
     }
 }
+#[derive(TypeName)]
 pub struct ExtractWindowSystem;
+// impl TypeName for ExtractWindowSystem {}
 impl<'a> System<'a> for ExtractWindowSystem {
     type SystemData = (ReadExpect<'a, Windows>, WriteExpect<'a, ExtractedWindows>);
     fn run(&mut self, (s_windows, mut s_extracted_windows): Self::SystemData) {
@@ -95,6 +101,7 @@ pub struct WindowSurfaces {
     /// List of windows that we have already called the initial `configure_surface` for
     configured_windows: HashSet<WindowId>,
 }
+#[derive(TypeName)]
 pub struct PrepareWindowsSystem;
 impl<'a> System<'a> for PrepareWindowsSystem {
     type SystemData = (
@@ -108,10 +115,10 @@ impl<'a> System<'a> for PrepareWindowsSystem {
         &mut self,
         (
             s_windows,
-             mut s_extracted_windows,
-             mut s_window_surfaces,
-             s_render_device,
-             s_render_instance
+            mut s_extracted_windows,
+            mut s_window_surfaces,
+            s_render_device,
+            s_render_instance,
         ): Self::SystemData,
     ) {
         let window_surfaces = s_window_surfaces.deref_mut();

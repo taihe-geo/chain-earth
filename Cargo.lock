@@ -1672,6 +1672,7 @@ dependencies = [
  "specs-idvs",
  "thiserror",
  "tobj",
+ "typename",
  "uuid",
  "wgpu",
  "winit",
@@ -1736,6 +1737,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a4df2caa2dc9c3d1f7641ba981f4cd40ab229775aa7aeb834c9ab2850d50623d"
 dependencies = [
  "nom 5.1.2",
+]
+
+[[package]]
+name = "typename"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
