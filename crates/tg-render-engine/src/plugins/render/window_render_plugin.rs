@@ -6,7 +6,9 @@ use crate::{
     },
     App, HashMap, HashSet, Plugin,TypeName
 };
+use log::debug;
 use specs::{Read, ReadExpect, System, Write, WriteExpect};
+use tracing::{instrument, info};
 use typename::{TypeName};
 use std::{
     any::{type_name, TypeId},
@@ -24,8 +26,8 @@ impl Plugin for WindowRenderPlugin {
         app.world.insert(ExtractedWindows::default());
         app.world.insert(WindowSurfaces::default());
         app.add_add_systems(|dispatcher_builder| {
-            dispatcher_builder.add(ExtractWindowSystem, ExtractWindowSystem::id(), &[]);
-            dispatcher_builder.add(PrepareWindowsSystem, PrepareWindowsSystem::id(), &[]);
+            dispatcher_builder.add(ExtractWindowSystem, ExtractWindowSystem::name(), &[]);
+            dispatcher_builder.add(PrepareWindowsSystem, PrepareWindowsSystem::name(), &[]);
         });
     }
 }
@@ -121,6 +123,7 @@ impl<'a> System<'a> for PrepareWindowsSystem {
             s_render_instance,
         ): Self::SystemData,
     ) {
+        info!("prepare window system running");
         let window_surfaces = s_window_surfaces.deref_mut();
         for window in s_extracted_windows.windows.values_mut() {
             let surface = window_surfaces

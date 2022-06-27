@@ -4,3 +4,4 @@ pub mod default;
 pub mod transform;
 pub mod hierarchy;
 pub mod planet;
+pub mod log;

@@ -19,7 +19,7 @@ pub struct DeltaTime(f32);
 pub type HashSet<K> = hashbrown::HashSet<K, RandomState>;
 pub type HashMap<K, V> = hashbrown::HashMap<K, V, RandomState>;
 pub trait TypeName {
-    fn id() -> &'static str {
+    fn name() -> &'static str {
         type_name::<Self>()
     }
 }
