@@ -7,7 +7,7 @@ use tracing::{
 use tracing_log::LogTracer;
 #[cfg(feature = "tracing-chrome")]
 use tracing_subscriber::fmt::{format::DefaultFields, FormattedFields};
-use tracing_subscriber::{prelude::*, registry::Registry, EnvFilter};
+use tracing_subscriber::{prelude::*, registry::Registry, EnvFilter, fmt};
 #[derive(Default)]
 pub struct LogPlugin;
 
@@ -41,11 +41,10 @@ impl Plugin for LogPlugin {
         };
         LogTracer::init().unwrap();
         let filter_layer = EnvFilter::try_from_default_env()
-            .or_else(|_| EnvFilter::try_new(&default_filter))
+            // .or_else(|_| EnvFilter::try_new(&default_filter))
+            .or_else(|_| EnvFilter::try_new("info"))
             .unwrap();
-        let subscriber = Registry::default().with(filter_layer);
-        let fmt_layer = tracing_subscriber::fmt::Layer::default();
-        let subscriber = subscriber.with(fmt_layer);
+        let subscriber = Registry::default().with(filter_layer).with(fmt::layer().pretty());
         tracing::subscriber::set_global_default(subscriber)
                 .expect("Could not set global default tracing subscriber. If you've already set up a tracing subscriber, please disable LogPlugin from Bevy's DefaultPlugins");
     }

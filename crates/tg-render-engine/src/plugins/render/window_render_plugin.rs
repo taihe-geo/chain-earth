@@ -4,19 +4,19 @@ use crate::{
         window::{PresentMode, WindowId},
         windows::Windows,
     },
-    App, HashMap, HashSet, Plugin,TypeName
+    App, HashMap, HashSet, Plugin, TypeName,
 };
 use log::debug;
 use specs::{Read, ReadExpect, System, Write, WriteExpect};
-use tracing::{instrument, info};
-use typename::{TypeName};
 use std::{
     any::{type_name, TypeId},
     ops::{Deref, DerefMut},
 };
-use wgpu::{Instance, TextureFormat, TextureView};
+use tracing::{info, instrument};
+use typename::TypeName;
+use wgpu::{Instance, TextureFormat};
 
-use super::RenderDevice;
+use super::{texture::TextureView, RenderDevice};
 #[derive(Default)]
 pub struct NonSendMarker;
 
@@ -27,7 +27,11 @@ impl Plugin for WindowRenderPlugin {
         app.world.insert(WindowSurfaces::default());
         app.add_add_systems(|dispatcher_builder| {
             dispatcher_builder.add(ExtractWindowSystem, ExtractWindowSystem::name(), &[]);
-            dispatcher_builder.add(PrepareWindowsSystem, PrepareWindowsSystem::name(), &[]);
+            dispatcher_builder.add(
+                PrepareWindowsSystem,
+                PrepareWindowsSystem::name(),
+                &[ExtractWindowSystem::name()],
+            );
         });
     }
 }
@@ -161,14 +165,18 @@ impl<'a> System<'a> for PrepareWindowsSystem {
                         .get_current_texture()
                         .expect("Error reconfiguring surface")
                 }
-                err => err.expect("Failed to acquire next swap chain texture!"),
+                err => {
+                    info!("some error,{:?}", err);
+                    err.expect("Failed to acquire next swap chain texture!")
+                }
             };
 
-            window.swap_chain_texture = Some(
-                frame
-                    .texture
-                    .create_view(&wgpu::TextureViewDescriptor::default()),
-            );
+            // window.swap_chain_texture = Some(
+            //     frame
+            //         .texture
+            //         .create_view(&wgpu::TextureViewDescriptor::default()),
+            // );
+            window.swap_chain_texture = Some(TextureView::from(frame));
         }
     }
 }
