@@ -22,6 +22,8 @@ nalgebra = "0.21.0"
 nalgebra-glm = { version = "0.7", features = ["serde-serialize"] }
 uuid = { version = "1.1.2", features = ["v4","fast-rng","macro-diagnostics"] }
 raw-window-handle = "0.4.2"
+# ECS系统
+# shred = { version = "0.13", default-features = false }
 specs = {version="0.17.0",features=["parallel","specs-derive","nightly","serde"]}
 # specs-idvs={path="../specs-idvs"}
 specs-idvs = { git = "https://gitlab.com/veloren/specs-idvs.git", rev = "8be2abcddf8f524cb5876e8dd20a7e47cfaf7573" }
@@ -39,3 +41,5 @@ tracing-error = "0.2.0"
 tracing-appender = "0.2.2"
 tracing-log = "0.1.2"
 color-eyre = "0.5"
+# 复制帮助
+copyless = "0.1.5"

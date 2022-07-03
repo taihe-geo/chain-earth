@@ -96,33 +96,6 @@ async fn initialize_renderer(
     let queue = Arc::new(queue);
     (RenderDevice::from(device), queue, adapter_info, adapter)
 }
-
-// #[derive(TypeName)]
-// pub struct PreparedViewTargetSystem;
-// impl<'a> System<'a> for PreparedViewTargetSystem {
-//     type SystemData = (
-//         Entities<'a>,
-//         ReadExpect<'a, ExtractedWindows>,
-//         ReadExpect<'a, RenderTarget>,
-//         WriteStorage<'a, ViewTarget>,
-//     );
-//     fn run(
-//         &mut self,
-//         (s_entities, s_extected_windows, s_render_target, s_view_target): Self::SystemData,
-//     ) {
-//         for (entity) in s_entities.join() {
-//             if let Some(texture_view) = s_render_target.get_texture_view(&s_extected_windows) {
-//                 s_view_target.insert(
-//                     entity,
-//                     ViewTarget {
-//                         view: texture_view.clone(),
-//                         sampled_target: None,
-//                     },
-//                 );
-//             }
-//         }
-//     }
-// }
 #[derive(TypeName)]
 pub struct RenderSystem;
 impl<'a> System<'a> for RenderSystem {

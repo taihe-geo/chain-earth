@@ -127,7 +127,6 @@ impl<'a> System<'a> for PrepareWindowsSystem {
             s_render_instance,
         ): Self::SystemData,
     ) {
-        info!("prepare window system running");
         let window_surfaces = s_window_surfaces.deref_mut();
         for window in s_extracted_windows.windows.values_mut() {
             let surface = window_surfaces
@@ -170,12 +169,6 @@ impl<'a> System<'a> for PrepareWindowsSystem {
                     err.expect("Failed to acquire next swap chain texture!")
                 }
             };
-
-            // window.swap_chain_texture = Some(
-            //     frame
-            //         .texture
-            //         .create_view(&wgpu::TextureViewDescriptor::default()),
-            // );
             window.swap_chain_texture = Some(TextureView::from(frame));
         }
     }

@@ -1847,6 +1847,7 @@ dependencies = [
  "anyhow",
  "bytemuck",
  "color-eyre",
+ "copyless",
  "env_logger",
  "hashbrown",
  "image",
